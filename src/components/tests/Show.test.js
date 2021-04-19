@@ -1,26 +1,105 @@
-import React from 'react';
-import { render, screen } from '@testing-library/react';
-import userEvent from '@testing-library/user-event';
+import React from "react";
+import {
+  getByLabelText,
+  getByTestId,
+  getByText,
+  render,
+  screen,
+} from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
+import selectEvent from "react-select-event";
 
-import Show from './../Show';
+import Show from "./../Show";
 
 const testShow = {
-    //add in approprate test data structure here.
-}
+  name: "show name",
+  summary: "show summary",
+  seasons: [
+    {
+      id: 5555,
+      name: "season 1",
+      episodes: [],
+    },
+    {
+      id: 5552,
+      name: "season 2",
+      episodes: [],
+    },
+  ],
+};
 
-test('renders testShow and no selected Season without errors', ()=>{
+test("renders testShow and no selected Season without errors", () => {
+  //   arrange
+  render(<Show show={testShow} selectedSeason={"none"} />);
+
+  // act
+  const loading = screen.queryByText(/fetching/i);
+
+  //   assert
+  expect(loading).toBeFalsy;
 });
 
-test('renders Loading component when prop show is null', () => {
+test("renders Loading component when prop show is null", () => {
+  //   arrange
+  render(<Show show={null} selectedSeason={"none"} />);
+
+  // act
+  const loading = screen.queryByText(/fetching/i);
+
+  //   assert
+  expect(loading).toBeInTheDocument();
 });
 
-test('renders same number of options seasons are passed in', ()=>{
+test("renders same number of options seasons are passed in", () => {
+  //   arrange
+  render(<Show show={testShow} selectedSeason={"none"} />);
+
+  // act
+  const seasons = screen.queryAllByTestId(/season-option/i);
+
+  //   assert
+  expect(seasons).toHaveLength(2);
 });
 
-test('handleSelect is called when an season is selected', () => {
+test("handleSelect is called when an season is selected", async () => {
+  const mockSeasonSelect = jest.fn();
+
+  //   arrange
+  render(
+    <Show
+      show={testShow}
+      selectedSeason={"none"}
+      handleSelect={mockSeasonSelect}
+    />
+  );
+
+  // act
+  const options = screen.getByLabelText(/season/i);
+  userEvent.selectOptions(options, screen.getByText(/season 1/i));
+  userEvent.selectOptions(options, screen.getByText(/season 2/i));
+
+  //   assert
+  expect(mockSeasonSelect.mock.calls.length).toBe(2);
 });
 
-test('component renders when no seasons are selected and when rerenders with a season passed in', () => {
+test("component renders when no seasons are selected and when rerenders with a season passed in", () => {
+  //   arrange
+  const { rerender } = render(<Show show={testShow} selectedSeason={"none"} />);
+
+  // act
+  let episodes = screen.queryByTestId(/episodes-container/i);
+
+  //   assert
+  expect(episodes).toBeNull();
+
+  //   arrange
+  rerender(<Show show={testShow} selectedSeason={1} />);
+
+  // act
+  episodes = screen.queryByTestId(/episodes-container/i);
+
+  //   assert
+  expect(episodes).toBeInTheDocument();
 });
 
 //Tasks:
